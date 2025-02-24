@@ -10,6 +10,7 @@ from components import (
 )
 from style import apply_custom_style
 from utils import initialize_session_state
+from client_portal import render_client_portal, render_client_login
 
 def main():
     st.set_page_config(
@@ -26,9 +27,30 @@ def main():
     # Initialize session state
     initialize_session_state()
 
-    # Main title
-    st.title("⚖️ Legal Time Tracker")
+    # Check if we're in client portal mode
+    if "client_portal" not in st.session_state:
+        st.session_state.client_portal = False
+    if "client_logged_in" not in st.session_state:
+        st.session_state.client_logged_in = False
 
+    # Main title
+    if not st.session_state.client_portal:
+        st.title("⚖️ Legal Time Tracker")
+
+    # Toggle between admin and client portal
+    if st.sidebar.button("Switch to Client Portal" if not st.session_state.client_portal else "Switch to Admin Panel"):
+        st.session_state.client_portal = not st.session_state.client_portal
+        st.session_state.client_logged_in = False
+        st.rerun()
+
+    if st.session_state.client_portal:
+        if st.session_state.client_logged_in:
+            render_client_portal(data_manager, st.session_state.client_name)
+        else:
+            render_client_login()
+        return
+
+    # Regular admin interface continues here
     # Sidebar navigation
     page = st.sidebar.radio(
         "Navigation",

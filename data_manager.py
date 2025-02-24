@@ -102,3 +102,13 @@ class DataManager:
         df = pd.read_csv(self.time_entries_file)
         mask = (df['date'] >= start_date.strftime('%Y-%m-%d')) & (df['date'] <= end_date.strftime('%Y-%m-%d'))
         return df[mask]
+
+    def get_client_entries(self, client_name, start_date, end_date):
+        """Get time entries for a specific client between dates"""
+        df = pd.read_csv(self.time_entries_file)
+        mask = (
+            (df['client'] == client_name) &
+            (df['date'] >= start_date.strftime('%Y-%m-%d')) &
+            (df['date'] <= end_date.strftime('%Y-%m-%d'))
+        )
+        return df[mask]
