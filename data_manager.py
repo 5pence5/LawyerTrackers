@@ -8,6 +8,7 @@ class DataManager:
         self.clients_file = "clients.csv"
         self.matters_file = "matters.csv"
         self._initialize_files()
+        print("DataManager initialized") # Debug log
 
     def _initialize_files(self):
         """Initialize CSV files if they don't exist or are empty"""
@@ -23,6 +24,7 @@ class DataManager:
                 'client_name': ['Sample Client A', 'Sample Client B']
             })
             sample_clients.to_csv(self.clients_file, index=False)
+            print(f"Initialized clients file with {len(sample_clients)} clients") # Debug log
 
         # Initialize matters file
         if not os.path.exists(self.matters_file) or os.path.getsize(self.matters_file) <= len('client_name,matter_name\n'):
@@ -31,6 +33,7 @@ class DataManager:
                 'matter_name': ['General Matter', 'Special Project', 'Contract Review']
             })
             sample_matters.to_csv(self.matters_file, index=False)
+            print(f"Initialized matters file with {len(sample_matters)} matters") # Debug log
 
     def add_time_entry(self, entry):
         """Add a new time entry"""
@@ -55,18 +58,31 @@ class DataManager:
         """Get matters for a specific client"""
         try:
             if not client:
+                print("No client selected, returning empty matters list") # Debug log
                 return []
+
+            print(f"Fetching matters for client: {client}") # Debug log
             df = pd.read_csv(self.matters_file)
+
             if df.empty:
-                self._initialize_files()  # Reinitialize if empty
+                print("Matters file is empty, reinitializing") # Debug log
+                self._initialize_files()
                 df = pd.read_csv(self.matters_file)
-            return df[df['client_name'] == client]['matter_name'].tolist()
+
+            matters = df[df['client_name'] == client]['matter_name'].tolist()
+            print(f"Found {len(matters)} matters for client {client}") # Debug log
+            return matters
+
         except (FileNotFoundError, pd.errors.EmptyDataError):
-            self._initialize_files()  # Reinitialize if file not found or empty
+            print("Error reading matters file, reinitializing") # Debug log
+            self._initialize_files()
             try:
                 df = pd.read_csv(self.matters_file)
-                return df[df['client_name'] == client]['matter_name'].tolist()
-            except:
+                matters = df[df['client_name'] == client]['matter_name'].tolist()
+                print(f"After reinitialization, found {len(matters)} matters for client {client}") # Debug log
+                return matters
+            except Exception as e:
+                print(f"Error after reinitialization: {str(e)}") # Debug log
                 return []
 
     def add_client(self, client_name):

@@ -75,10 +75,20 @@ def render_time_entry_form(data_manager):
     st.subheader("Time Entry")
 
     with st.form("time_entry_form"):
-        client = st.selectbox("Client", data_manager.get_clients())
+        # Get and display available clients
+        clients = data_manager.get_clients()
+        if not clients:
+            st.error("No clients available. Please add a client first.")
+            return
 
+        client = st.selectbox("Client", options=clients, key="client_select")
+
+        # Get matters for selected client
         matters = data_manager.get_matters(client) if client else []
-        matter = st.selectbox("Matter", matters)
+        if not matters and client:
+            st.warning(f"No matters found for client: {client}")
+
+        matter = st.selectbox("Matter", options=matters if matters else ["No matters available"], key="matter_select")
 
         # Auto-fill duration from timer if available
         default_duration = st.session_state.get('current_duration', "01:00")
@@ -88,6 +98,10 @@ def render_time_entry_form(data_manager):
         submitted = st.form_submit_button("Submit Time Entry")
 
         if submitted:
+            if matter == "No matters available":
+                st.error("Please select a valid matter before submitting")
+                return
+
             try:
                 hours, minutes = map(int, duration.split(":"))
                 if hours < 0 or minutes < 0 or minutes >= 60:
