@@ -10,25 +10,25 @@ class DataManager:
         self._initialize_files()
 
     def _initialize_files(self):
-        """Initialize CSV files if they don't exist"""
+        """Initialize CSV files if they don't exist or are empty"""
         # Initialize time entries file
         if not os.path.exists(self.time_entries_file):
             pd.DataFrame(columns=[
                 'date', 'client', 'matter', 'duration', 'narrative'
             ]).to_csv(self.time_entries_file, index=False)
 
-        # Initialize clients file with sample data
-        if not os.path.exists(self.clients_file):
+        # Initialize clients file
+        if not os.path.exists(self.clients_file) or os.path.getsize(self.clients_file) <= len('client_name\n'):
             sample_clients = pd.DataFrame({
-                'client_name': ['Sample Client']
+                'client_name': ['Sample Client A', 'Sample Client B']
             })
             sample_clients.to_csv(self.clients_file, index=False)
 
-        # Initialize matters file with sample data
-        if not os.path.exists(self.matters_file):
+        # Initialize matters file
+        if not os.path.exists(self.matters_file) or os.path.getsize(self.matters_file) <= len('client_name,matter_name\n'):
             sample_matters = pd.DataFrame({
-                'client_name': ['Sample Client'],
-                'matter_name': ['General']
+                'client_name': ['Sample Client A', 'Sample Client A', 'Sample Client B'],
+                'matter_name': ['General Matter', 'Special Project', 'Contract Review']
             })
             sample_matters.to_csv(self.matters_file, index=False)
 
@@ -57,9 +57,17 @@ class DataManager:
             if not client:
                 return []
             df = pd.read_csv(self.matters_file)
+            if df.empty:
+                self._initialize_files()  # Reinitialize if empty
+                df = pd.read_csv(self.matters_file)
             return df[df['client_name'] == client]['matter_name'].tolist()
         except (FileNotFoundError, pd.errors.EmptyDataError):
-            return []
+            self._initialize_files()  # Reinitialize if file not found or empty
+            try:
+                df = pd.read_csv(self.matters_file)
+                return df[df['client_name'] == client]['matter_name'].tolist()
+            except:
+                return []
 
     def add_client(self, client_name):
         """Add a new client"""
