@@ -7,37 +7,64 @@ def render_timer():
     """Render the running timer component"""
     st.subheader("Timer")
 
+    # Initialize timer state if not exists
     if 'timer_running' not in st.session_state:
         st.session_state.timer_running = False
+    if 'start_time' not in st.session_state:
         st.session_state.start_time = None
+    if 'elapsed_time' not in st.session_state:
         st.session_state.elapsed_time = timedelta()
+    if 'last_update' not in st.session_state:
+        st.session_state.last_update = None
 
     col1, col2 = st.columns(2)
 
     with col1:
         if st.button("Start Timer" if not st.session_state.timer_running else "Stop Timer"):
             if not st.session_state.timer_running:
+                # Start the timer
                 st.session_state.timer_running = True
                 st.session_state.start_time = datetime.now()
+                st.session_state.last_update = datetime.now()
+                st.rerun()
             else:
+                # Stop the timer
                 st.session_state.timer_running = False
                 if st.session_state.start_time:
                     st.session_state.elapsed_time = datetime.now() - st.session_state.start_time
+                st.session_state.start_time = None
+                st.rerun()
 
     with col2:
         if st.button("Reset"):
             st.session_state.timer_running = False
             st.session_state.start_time = None
             st.session_state.elapsed_time = timedelta()
+            st.session_state.last_update = None
+            if 'current_duration' in st.session_state:
+                del st.session_state.current_duration
+            st.rerun()
 
+    # Update timer display
     if st.session_state.timer_running and st.session_state.start_time:
-        elapsed = datetime.now() - st.session_state.start_time
+        current_time = datetime.now()
+        elapsed = current_time - st.session_state.start_time
+
+        # Display the timer
         st.metric("Time Elapsed", f"{elapsed.seconds // 3600:02d}:{(elapsed.seconds // 60) % 60:02d}")
+
         # Store formatted time for auto-fill
         st.session_state.current_duration = f"{elapsed.seconds // 3600:02d}:{(elapsed.seconds // 60) % 60:02d}"
+
+        # Force a rerun every second to update the display
+        if (st.session_state.last_update is None or 
+            (current_time - st.session_state.last_update).seconds >= 1):
+            st.session_state.last_update = current_time
+            time.sleep(0.1)  # Small delay to prevent excessive reruns
+            st.rerun()
+
     elif st.session_state.elapsed_time:
         st.metric("Time Elapsed", f"{st.session_state.elapsed_time.seconds // 3600:02d}:{(st.session_state.elapsed_time.seconds // 60) % 60:02d}")
-        # Store formatted time for auto-fill
         st.session_state.current_duration = f"{st.session_state.elapsed_time.seconds // 3600:02d}:{(st.session_state.elapsed_time.seconds // 60) % 60:02d}"
 
 def render_time_entry_form(data_manager):
@@ -79,6 +106,7 @@ def render_time_entry_form(data_manager):
                 st.session_state.timer_running = False
                 st.session_state.start_time = None
                 st.session_state.elapsed_time = timedelta()
+                st.session_state.last_update = None
                 if 'current_duration' in st.session_state:
                     del st.session_state.current_duration
                 st.rerun()
