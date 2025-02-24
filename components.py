@@ -30,9 +30,9 @@ def render_timer():
             else:
                 # Stop the timer
                 st.session_state.timer_running = False
-                if st.session_state.start_time:
-                    st.session_state.elapsed_time = datetime.now() - st.session_state.start_time
+                st.session_state.elapsed_time = datetime.now() - st.session_state.start_time
                 st.session_state.start_time = None
+                st.session_state.last_update = None
                 st.rerun()
 
     with col2:
@@ -51,10 +51,12 @@ def render_timer():
         elapsed = current_time - st.session_state.start_time
 
         # Display the timer
-        st.metric("Time Elapsed", f"{elapsed.seconds // 3600:02d}:{(elapsed.seconds // 60) % 60:02d}")
+        hours = elapsed.seconds // 3600
+        minutes = (elapsed.seconds % 3600) // 60
+        st.metric("Time Elapsed", f"{hours:02d}:{minutes:02d}")
 
         # Store formatted time for auto-fill
-        st.session_state.current_duration = f"{elapsed.seconds // 3600:02d}:{(elapsed.seconds // 60) % 60:02d}"
+        st.session_state.current_duration = f"{hours:02d}:{minutes:02d}"
 
         # Force a rerun every second to update the display
         if (st.session_state.last_update is None or 
@@ -64,8 +66,10 @@ def render_timer():
             st.rerun()
 
     elif st.session_state.elapsed_time:
-        st.metric("Time Elapsed", f"{st.session_state.elapsed_time.seconds // 3600:02d}:{(st.session_state.elapsed_time.seconds // 60) % 60:02d}")
-        st.session_state.current_duration = f"{st.session_state.elapsed_time.seconds // 3600:02d}:{(st.session_state.elapsed_time.seconds // 60) % 60:02d}"
+        hours = st.session_state.elapsed_time.seconds // 3600
+        minutes = (st.session_state.elapsed_time.seconds % 3600) // 60
+        st.metric("Time Elapsed", f"{hours:02d}:{minutes:02d}")
+        st.session_state.current_duration = f"{hours:02d}:{minutes:02d}"
 
 def render_time_entry_form(data_manager):
     """Render the time entry form"""
