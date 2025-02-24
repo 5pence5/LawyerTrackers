@@ -1,1 +1,2 @@
-npx repomix.-help
+
+npx repomix --help
