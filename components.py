@@ -1,6 +1,5 @@
 import streamlit as st
 from datetime import datetime, timedelta
-import pandas as pd
 import time
 
 def render_timer():
