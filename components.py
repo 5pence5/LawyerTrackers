@@ -75,40 +75,11 @@ def render_time_entry_form(data_manager):
     """Render the time entry form"""
     st.subheader("Time Entry")
 
-    # Quick duration presets
-    duration_presets = {
-        "15m": "00:15",
-        "30m": "00:30",
-        "1h": "01:00",
-        "2h": "02:00"
-    }
-    
-    cols = st.columns(len(duration_presets))
-    for col, (label, duration) in zip(cols, duration_presets.items()):
-        if col.button(f"⏱️ {label}"):
-            st.session_state.current_duration = duration
-
-    # Recent matters
-    if 'recent_matters' not in st.session_state:
-        st.session_state.recent_matters = []
-
-    if st.session_state.recent_matters:
-        st.write("Recent Matters:")
-        recent_cols = st.columns(min(3, len(st.session_state.recent_matters)))
-        for col, recent in zip(recent_cols, st.session_state.recent_matters[-3:]):
-            if col.button(f"📋 {recent['client']} - {recent['matter']}"):
-                st.session_state.quick_client = recent['client']
-                st.session_state.quick_matter = recent['matter']
-
     with st.form("time_entry_form"):
-        client = st.selectbox("Client", data_manager.get_clients(), 
-                            key="client_select",
-                            value=st.session_state.get('quick_client', None))
+        client = st.selectbox("Client", data_manager.get_clients())
 
         matters = data_manager.get_matters(client) if client else []
-        matter = st.selectbox("Matter", matters,
-                            key="matter_select",
-                            value=st.session_state.get('quick_matter', None))
+        matter = st.selectbox("Matter", matters)
 
         # Auto-fill duration from timer if available
         default_duration = st.session_state.get('current_duration', "01:00")
@@ -133,17 +104,6 @@ def render_time_entry_form(data_manager):
                 }
 
                 data_manager.add_time_entry(entry)
-                
-                # Update recent matters
-                if 'recent_matters' not in st.session_state:
-                    st.session_state.recent_matters = []
-                st.session_state.recent_matters.append({
-                    'client': client,
-                    'matter': matter
-                })
-                # Keep only last 5 matters
-                st.session_state.recent_matters = st.session_state.recent_matters[-5:]
-                
                 st.success("Time entry added successfully!")
 
                 # Reset timer after successful submission
